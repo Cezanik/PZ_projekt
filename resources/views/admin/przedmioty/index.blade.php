@@ -1,25 +1,38 @@
 @extends('layout')
 
 @section('content')
-<a href="{{ route('dashboard') }}">Powrót</a> | 
-<a href="{{ route('admin.przedmiot.create') }}">Dodaj przedmiot</a>
+<div style="margin-bottom: 20px;">
+    <a href="{{ route('dashboard') }}">Powrót do Dashboardu</a> | 
+    <a href="{{ route('admin.przedmiot.create') }}">Dodaj nowy przedmiot</a>
+</div>
 
 <h1>Lista Przedmiotów</h1>
 
-@if(session('success')) <p style="color: green">{{ session('success') }}</p> @endif
-
-<table border="1" cellpadding="5" cellspacing="0">
+<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
     <thead>
-        <tr>
+        <tr style="background-color: #f2f2f2;">
             <th>ID</th>
-            <th>Nazwa</th>
-        </tr>
+            <th>Nazwa Przedmiotu</th>
+            <th>Akcje</th> </tr>
     </thead>
     <tbody>
-        @foreach($przedmioty as $p)
+        @foreach($przedmioty as $przedmiot)
         <tr>
-            <td>{{ $p->id }}</td>
-            <td>{{ $p->nazwa }}</td>
+            <td>{{ $przedmiot->id }}</td>
+            <td>{{ $przedmiot->nazwa }}</td>
+            <td>
+                <a href="{{ route('admin.przedmiot.edit', $przedmiot->id) }}" style="text-decoration: none; color: blue; margin-right: 10px;">
+                    [Edytuj]
+                </a>
+
+                <form action="{{ route('admin.przedmiot.destroy', $przedmiot->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć ten przedmiot?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" style="color: red; border: none; background: none; cursor: pointer; text-decoration: underline;">
+                        [Usuń]
+                    </button>
+                </form>
+            </td>
         </tr>
         @endforeach
     </tbody>

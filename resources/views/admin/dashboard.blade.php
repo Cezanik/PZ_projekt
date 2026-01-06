@@ -49,6 +49,8 @@
             <h3>🎓 Uczniowie i Rodzice</h3>
             <p>Zarządzanie powiązaniami.</p>
             <ul>
+                <li><a href="{{ route('admin.uczen.klasa.index') }}">Uczeń-Klasa</a></li>
+                <li><a href="{{ route('admin.rodzic.uczen.index') }}">Rodzic-Uczeń</a></li>
                 <li><a href="{{ route('admin.uczen.klasa.create') }}">Przypisz ucznia do klasy</a></li>
                 <li><a href="{{ route('admin.rodzic.uczen.create') }}">Powiąż rodzica z uczniem</a></li>
             </ul>
