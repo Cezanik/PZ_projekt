@@ -33,39 +33,40 @@ Route::middleware('auth')->group(function () {
 
     // === GRUPA ADMINA ===
     Route::controller(AdminController::class)
-        ->prefix('admin')
-        ->name('admin.')
-        ->group(function () {
-            
-            // 1. Użytkownicy
-            Route::get('/users', 'indexUsers')->name('users.index');
-            Route::get('/users/create', 'createUser')->name('user.create'); // Formularz
-            Route::post('/users', 'storeUser')->name('user.store');         // Zapis
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        
+        // 1. Użytkownicy
+        Route::get('/users', 'indexUsers')->name('users.index');
+        Route::get('/users/create', 'createUser')->name('user.create');
+        Route::post('/users', 'storeUser')->name('user.store');
 
-            // 2. Klasy
-            Route::get('/klasy', 'indexKlasy')->name('klasy.index');
-            Route::get('/klasy/create', 'createKlasa')->name('klasa.create');
-            Route::post('/klasy', 'storeKlasa')->name('klasa.store');
+        // 2. Klasy
+        Route::get('/klasy', 'indexKlasy')->name('klasy.index');
+        Route::get('/klasy/create', 'createKlasa')->name('klasa.create');
+        Route::post('/klasy', 'storeKlasa')->name('klasa.store');
 
-            // 3. Przedmioty
-            Route::get('/przedmioty', 'indexPrzedmioty')->name('przedmioty.index');
-            Route::get('/przedmioty/create', 'createPrzedmiot')->name('przedmiot.create');
-            Route::post('/przedmioty', 'storePrzedmiot')->name('przedmiot.store');
+        // 3. Przedmioty
+        Route::get('/przedmioty', 'indexPrzedmioty')->name('przedmioty.index');
+        Route::get('/przedmioty/create', 'createPrzedmiot')->name('przedmiot.create');
+        Route::post('/przedmioty', 'storePrzedmiot')->name('przedmiot.store');
 
-            // 4. Przydziały (Nauczyciel -> Przedmiot)
-            Route::get('/przydzialy', 'indexPrzydzialy')->name('przydzialy.index');
-            Route::get('/przydzialy/nauczyciel', 'createPrzydzial')->name('przydzial.nauczyciel');
-            Route::post('/przydzialy/nauczyciel', 'storePrzydzial')->name('przydzial.store');
+        // 4. Przydziały (Nauczyciel)
+        Route::get('/przydzialy', 'indexPrzydzialy')->name('przydzialy.index');
+        Route::get('/przydzialy/nauczyciel', 'createPrzydzial')->name('przydzial.nauczyciel');
+        Route::post('/przydzialy/nauczyciel', 'storePrzydzial')->name('przydzial.store');
 
-            // 5. Uczniowie i Rodzice
-            // Uczeń -> Klasa
-            Route::get('/przydzialy/uczen-klasa', 'createUczenKlasa')->name('uczen.klasa.create');
-            Route::post('/uczen-klasa', 'storeUczenKlasa')->name('uczen.przypisz');
-            
-            // Rodzic -> Uczeń
-            Route::get('/przydzialy/rodzic-uczen', 'createRodzicUczen')->name('rodzic.uczen.create');
-            Route::post('/rodzic-uczen', 'storeRodzicUczen')->name('rodzic.powiaz');
-    });
+        // 5. Przypisywanie (Uczniowie/Rodzice)
+        // Uczeń -> Klasa
+        
+        Route::get('/przydzialy/uczen-klasa', 'createUczenKlasa')->name('uczen.klasa.create');
+        Route::post('/uczen-klasa', 'storeUczenKlasa')->name('uczen.przypisz');
+        
+        // Rodzic -> Uczeń
+        Route::get('/przydzialy/rodzic-uczen', 'createRodzicUczen')->name('rodzic.uczen.create');
+        Route::post('/rodzic-uczen', 'storeRodzicUczen')->name('rodzic.powiaz');
+});
     
     // === OCENY (Nauczyciel / Uczeń / Rodzic) ===
     // Grupowanie OcenyController
