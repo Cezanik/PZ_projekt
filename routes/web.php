@@ -11,53 +11,67 @@ use App\Http\Controllers\OcenyController;
 |--------------------------------------------------------------------------
 */
 
-// Strona główna przekierowuje do logowania
+// Przekierowanie ze strony głównej
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
 // --- GOŚCIE (niezalogowani) ---
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    // PDF str. 5: Grupowanie tras dla LoginController
+    Route::controller(LoginController::class)->group(function () {
+        Route::get('/login', 'showLoginForm')->name('login');
+        Route::post('/login', 'login');
+    });
 });
 
 // --- ZALOGOWANI ---
 Route::middleware('auth')->group(function () {
     
-    // Wylogowanie
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
-    // Dashboard (LoginController decyduje który widok pokazać)
     Route::get('/dashboard', [LoginController::class, 'dashboard'])->name('dashboard');
 
-    // Trasy ADMINA (można dodać middleware sprawdzający rolę)
-    Route::post('/admin/user', [AdminController::class, 'createUser']);
-    Route::post('/admin/klasa', [AdminController::class, 'createKlasa']);
-    Route::post('/admin/przydzial', [AdminController::class, 'assignTeacherToSubjectInClass']);
-    // Wewnątrz grupy middleware auth / admin:
-Route::post('/admin/przedmiot', [AdminController::class, 'createPrzedmiot']);
+    // === GRUPA ADMINA ===
+    // Zastosowanie Route::controller (PDF str. 11 )
+    Route::controller(AdminController::class)
+        ->prefix('admin') // Dodajemy prefix URL (np. /admin/user)
+        ->name('admin.')  // Dodajemy prefix nazw tras (PDF str. 10 )
+        ->group(function () {
+            
+            // 1. Użytkownicy
+            Route::get('/user', 'showUserForm')->name('user.create'); // Formularz
+            Route::post('/user', 'createUser')->name('user.store');   // Akcja
 
-// Dla powiązania rodzic-uczeń (dodaj metodę w AdminController jeśli jej nie ma, lub użyj istniejącej)
-Route::post('/admin/rodzic-uczen', [AdminController::class, 'linkParentToStudent']); 
+            // 2. Klasy
+            Route::get('/klasa', 'showKlasaForm')->name('klasa.create');
+            Route::post('/klasa', 'createKlasa')->name('klasa.store');
 
-// Dla przypisania ucznia do klasy (metoda assignStudentsToKlasa przyjmuje 'klasa' w URL, trzeba to dostosować)
-// Uproszczona wersja trasy dla formularza powyżej:
-Route::post('/admin/przypisz-ucznia', function(\Illuminate\Http\Request $request) {
-    $klasa = \App\Models\Klasa::findOrFail($request->klasa_id);
-    $controller = new \App\Http\Controllers\AdminController;
-    return $controller->assignStudentsToKlasa($request, $klasa);
-});
+            // 3. Przedmioty
+            Route::get('/przedmiot', 'showPrzedmiotForm')->name('przedmiot.create');
+            Route::post('/przedmiot', 'createPrzedmiot')->name('przedmiot.store');
+
+            // 4. Przydziały (Nauczyciel)
+            Route::get('/przydzial', 'showPrzydzialNauczycielaForm')->name('przydzial.nauczyciel');
+            Route::post('/przydzial', 'assignTeacherToSubjectInClass')->name('przydzial.store');
+
+            // 5. Przypisywanie uczniów
+            Route::get('/uczen-klasa', 'showPrzydzialUczniaForm')->name('uczen.przydzial');
+            Route::post('/uczen-klasa', 'assignStudentsToKlasaCustom')->name('uczen.przypisz');
+            
+            // 6. Rodzice
+            Route::post('/rodzic-uczen', 'linkParentToStudent')->name('rodzic.powiaz');
+    });
     
-    // Trasy NAUCZYCIELA
-    Route::post('/ocena', [OcenyController::class, 'store']);
-    Route::put('/ocena/{id}', [OcenyController::class, 'update']);
-    Route::post('/ocena/revert/{historia_id}', [OcenyController::class, 'revert']);
+    // === OCENY (Nauczyciel / Uczeń / Rodzic) ===
+    // Grupowanie OcenyController
+    Route::controller(OcenyController::class)->group(function () {
+        // Nauczyciel
+        Route::post('/ocena', 'store')->name('ocena.store');
+        Route::put('/ocena/{id}', 'update')->name('ocena.update');
+        Route::post('/ocena/revert/{historia_id}', 'revert')->name('ocena.revert');
 
-    // Trasy UCZNIA
-    Route::get('/moje-oceny', [OcenyController::class, 'myGrades']);
-
-    // Trasy RODZICA
-    Route::get('/oceny-dzieci', [OcenyController::class, 'childrenGrades']);
+        // Uczeń i Rodzic
+        Route::get('/moje-oceny', 'myGrades')->name('oceny.uczen');
+        Route::get('/oceny-dzieci', 'childrenGrades')->name('oceny.rodzic');
+    });
 });
-

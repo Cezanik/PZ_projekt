@@ -13,19 +13,13 @@ class OcenyController extends Controller
     // --- DLA NAUCZYCIELA ---
 
     // Wystawienie nowej oceny
-    public function store(Request $request)
+    public function store(StoreOcenaRequest $request)
     {
-        // Walidacja
-        $validated = $request->validate([
-            'uczen_id' => 'required|exists:users,id',
-            'przedmiot_id' => 'required|exists:przedmioty,id',
-            'wartosc' => 'required|numeric|between:1,6',
-            'opis' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         Ocena::create([
             'uczen_id' => $validated['uczen_id'],
-            'nauczyciel_id' => Auth::id(), // ID zalogowanego nauczyciela
+            'nauczyciel_id' => Auth::id(),
             'przedmiot_id' => $validated['przedmiot_id'],
             'wartosc' => $validated['wartosc'],
             'opis' => $validated['opis'] ?? '',
