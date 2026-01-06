@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'email',
+        'login',
         'password',
         'role',
         'imie',
@@ -62,6 +62,15 @@ class User extends Authenticatable
     public function ocenyWystawione()
     {
         return $this->hasMany(Ocena::class, 'nauczyciel_id');
+    }
+    public function dzieci()
+    {
+        return $this->belongsToMany(User::class, 'rodzic_uczen', 'rodzic_id', 'uczen_id');
+    }
+    
+    public function rodzice()
+    {
+        return $this->belongsToMany(User::class, 'rodzic_uczen', 'uczen_id', 'rodzic_id');
     }
     
 }
