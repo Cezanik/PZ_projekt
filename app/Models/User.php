@@ -18,9 +18,11 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
         'email',
         'password',
+        'role',
+        'imie',
+        'nazwisko',
     ];
 
     /**
@@ -39,7 +41,27 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function wychowawstwo()
+    {
+        return $this->hasOne(Klasa::class, 'wychowawca_id');
+    }
+
+    public function klasaUcznia()
+    {
+        return $this->belongsToMany(Klasa::class, 'uczniowie_klasy', 'uczen_id', 'klasa_id');
+    }
+
+    public function ocenyOtrzymane()
+    {
+        return $this->hasMany(Ocena::class, 'uczen_id');
+    }
+
+    public function ocenyWystawione()
+    {
+        return $this->hasMany(Ocena::class, 'nauczyciel_id');
+    }
+    
 }
