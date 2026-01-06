@@ -1,18 +1,20 @@
 @extends('layout')
 
 @section('content')
-    <a href="{{ route('dashboard') }}">&larr; Powrót do panelu</a>
-    <h2>Dodaj Przedmiot</h2>
-    
-    @if(session('success'))
-        <div style="color: green;">{{ session('success') }}</div>
-    @endif
+<a href="{{ route('admin.przedmioty.index') }}">Wróć do listy</a>
 
-    <form action="/admin/przedmioty" method="POST"> 
-        @csrf
-        <label>Nazwa przedmiotu:</label> 
-        <input type="text" name="nazwa" required>
-        <br><br>
-        <button type="submit">Dodaj przedmiot</button>
-    </form>
+<h2>Dodaj Przedmiot</h2>
+
+@if($errors->any())
+    <div style="color: red">
+        <ul>@foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
+    </div>
+@endif
+
+<form action="{{ route('admin.przedmiot.store') }}" method="POST"> 
+    @csrf
+    <label>Nazwa przedmiotu:</label><br>
+    <input type="text" name="nazwa" value="{{ old('nazwa') }}"><br><br>
+    <button type="submit">Zapisz</button>
+</form>
 @endsection

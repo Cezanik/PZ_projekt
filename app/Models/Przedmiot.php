@@ -7,10 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Przedmiot extends Model
 {
-    protected $table = 'przedmioty';
     use HasFactory;
 
-    // Relacja do ocen z tego przedmiotu
+    protected $table = 'przedmioty';
+    
+    // WYMAGANE: Brak kolumn created_at/updated_at w bazie
+    public $timestamps = false;
+
+    // WYMAGANE: Pola dozwolone do zapisu
+    protected $fillable = [
+        'nazwa'
+    ];
+
     public function oceny()
     {
         return $this->hasMany(Ocena::class, 'przedmiot_id');

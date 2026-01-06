@@ -32,34 +32,39 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [LoginController::class, 'dashboard'])->name('dashboard');
 
     // === GRUPA ADMINA ===
-    // Zastosowanie Route::controller (PDF str. 11 )
     Route::controller(AdminController::class)
-        ->prefix('admin') // Dodajemy prefix URL (np. /admin/user)
-        ->name('admin.')  // Dodajemy prefix nazw tras (PDF str. 10 )
+        ->prefix('admin')
+        ->name('admin.')
         ->group(function () {
             
             // 1. Użytkownicy
-            Route::get('/user', 'showUserForm')->name('user.create'); // Formularz
-            Route::post('/user', 'createUser')->name('user.store');   // Akcja
+            Route::get('/users', 'indexUsers')->name('users.index');
+            Route::get('/users/create', 'createUser')->name('user.create'); // Formularz
+            Route::post('/users', 'storeUser')->name('user.store');         // Zapis
 
             // 2. Klasy
-            Route::get('/klasa', 'showKlasaForm')->name('klasa.create');
-            Route::post('/klasa', 'createKlasa')->name('klasa.store');
+            Route::get('/klasy', 'indexKlasy')->name('klasy.index');
+            Route::get('/klasy/create', 'createKlasa')->name('klasa.create');
+            Route::post('/klasy', 'storeKlasa')->name('klasa.store');
 
             // 3. Przedmioty
-            Route::get('/przedmiot', 'showPrzedmiotForm')->name('przedmiot.create');
-            Route::post('/przedmiot', 'createPrzedmiot')->name('przedmiot.store');
+            Route::get('/przedmioty', 'indexPrzedmioty')->name('przedmioty.index');
+            Route::get('/przedmioty/create', 'createPrzedmiot')->name('przedmiot.create');
+            Route::post('/przedmioty', 'storePrzedmiot')->name('przedmiot.store');
 
-            // 4. Przydziały (Nauczyciel)
-            Route::get('/przydzial', 'showPrzydzialNauczycielaForm')->name('przydzial.nauczyciel');
-            Route::post('/przydzial', 'assignTeacherToSubjectInClass')->name('przydzial.store');
+            // 4. Przydziały (Nauczyciel -> Przedmiot)
+            Route::get('/przydzialy', 'indexPrzydzialy')->name('przydzialy.index');
+            Route::get('/przydzialy/nauczyciel', 'createPrzydzial')->name('przydzial.nauczyciel');
+            Route::post('/przydzialy/nauczyciel', 'storePrzydzial')->name('przydzial.store');
 
-            // 5. Przypisywanie uczniów
-            Route::get('/uczen-klasa', 'showPrzydzialUczniaForm')->name('uczen.przydzial');
-            Route::post('/uczen-klasa', 'assignStudentsToKlasaCustom')->name('uczen.przypisz');
+            // 5. Uczniowie i Rodzice
+            // Uczeń -> Klasa
+            Route::get('/przydzialy/uczen-klasa', 'createUczenKlasa')->name('uczen.klasa.create');
+            Route::post('/uczen-klasa', 'storeUczenKlasa')->name('uczen.przypisz');
             
-            // 6. Rodzice
-            Route::post('/rodzic-uczen', 'linkParentToStudent')->name('rodzic.powiaz');
+            // Rodzic -> Uczeń
+            Route::get('/przydzialy/rodzic-uczen', 'createRodzicUczen')->name('rodzic.uczen.create');
+            Route::post('/rodzic-uczen', 'storeRodzicUczen')->name('rodzic.powiaz');
     });
     
     // === OCENY (Nauczyciel / Uczeń / Rodzic) ===

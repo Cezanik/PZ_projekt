@@ -8,31 +8,88 @@ use App\Models\Przedmiot;
 use App\Models\NauczycielPrzedmiotKlasa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Validation\Rule;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\StoreKlasaRequest;
+use App\Http\Requests\StorePrzedmiotRequest;
+use App\Http\Requests\StorePrzydzialRequest;
+
 
 class AdminController extends Controller
 {
-    // --- METODY WYŚWIETLAJĄCE WIDOKI (GET) ---
-    // Zgodnie z PDF str. 8[cite: 1615], kontroler powinien mieć metodę zwracającą widok
+    // === 1. UŻYTKOWNICY (USERS) ===
 
-    public function showUserForm()
+    public function indexUsers()
+    {
+        $users = User::all();
+        return view('admin.users.index', compact('users'));
+    }
+
+    public function createUser() // Formularz
     {
         return view('admin.users.create');
     }
 
-    public function showKlasaForm()
+    public function storeUser(StoreUserRequest $request) // Zapis
+    {
+        User::create([
+            'login' => $request->validated()['login'],
+            'password' => Hash::make($request->validated()['password']),
+            'role' => $request->validated()['role'],
+            'imie' => $request->validated()['imie'],
+            'nazwisko' => $request->validated()['nazwisko'],
+        ]);
+        return redirect()->route('admin.users.index')->with('success', 'Użytkownik dodany.');
+    }
+
+    // === 2. KLASY (CLASSES) ===
+
+    public function indexKlasy()
+    {
+        $klasy = Klasa::with('wychowawca')->get();
+        return view('admin.klasy.index', compact('klasy'));
+    }
+
+    public function createKlasa()
     {
         $nauczyciele = User::where('role', 'nauczyciel')->get();
         return view('admin.klasy.create', compact('nauczyciele'));
     }
 
-    public function showPrzedmiotForm()
+    public function storeKlasa(StoreKlasaRequest $request)
+    {
+        Klasa::create($request->validated());
+        return redirect()->route('admin.klasy.index')->with('success', 'Klasa utworzona.');
+    }
+
+    // === 3. PRZEDMIOTY (SUBJECTS) ===
+
+    public function indexPrzedmioty()
+    {
+        $przedmioty = Przedmiot::all();
+        return view('admin.przedmioty.index', compact('przedmioty'));
+    }
+
+    public function createPrzedmiot()
     {
         return view('admin.przedmioty.create');
     }
 
-    public function showPrzydzialNauczycielaForm()
+    public function storePrzedmiot(StorePrzedmiotRequest $request)
+    {
+        Przedmiot::create($request->validated());
+        return redirect()->route('admin.przedmioty.index')->with('success', 'Przedmiot dodany.');
+    }
+
+    // === 4. PRZYDZIAŁY NAUCZYCIELI (TEACHER ASSIGNMENTS) ===
+
+    public function indexPrzydzialy()
+    {
+        $przydzialy = NauczycielPrzedmiotKlasa::with(['klasa', 'przedmiot', 'nauczyciel'])->get();
+        return view('admin.przydzialy.index', compact('przydzialy'));
+    }
+
+    public function createPrzydzial()
     {
         $klasy = Klasa::all();
         $przedmioty = Przedmiot::all();
@@ -40,78 +97,64 @@ class AdminController extends Controller
         return view('admin.przydzialy.nauczyciel', compact('klasy', 'przedmioty', 'nauczyciele'));
     }
 
-    public function showPrzydzialUczniaForm()
+    public function storePrzydzial(StorePrzydzialRequest $request)
+    {
+        NauczycielPrzedmiotKlasa::create($request->validated());
+        return redirect()->route('admin.przydzialy.index')->with('success', 'Przydział utworzony.');
+    }
+
+    // === 5. PRZYPISYWANIE UCZNIÓW I RODZICÓW ===
+
+    // Uczeń -> Klasa
+    public function createUczenKlasa()
     {
         $klasy = Klasa::all();
         $uczniowie = User::where('role', 'uczen')->get();
-        $rodzice = User::where('role', 'rodzic')->get();
-        return view('admin.przydzialy.uczen', compact('klasy', 'uczniowie', 'rodzice'));
+        return view('admin.przydzialy.uczen_klasa', compact('klasy', 'uczniowie'));
     }
 
-    // --- METODY LOGIKI BIZNESOWEJ (POST) ---
-
-    public function createUser(StoreUserRequest $request)
+    public function storeUczenKlasa(Request $request)
     {
-        // Tutaj dane są już zwalidowane!
-        // Pobieramy je metodą $request->validated()
-        $validated = $request->validated();
-
-        User::create([
-            'login' => $validated['login'],
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'imie' => $validated['imie'],
-            'nazwisko' => $validated['nazwisko'],
+        $request->validate([
+            'klasa_id' => 'required|exists:klasy,id',
+            'uczniowie_ids' => 'required|array',
+            'uczniowie_ids.*' => 'exists:users,id'
         ]);
 
-        return redirect()->route('admin.user.create')->with('success', 'Użytkownik dodany.');
-    }
-
-    public function createKlasa(Request $request)
-    {
-        $validated = $request->validate([
-            'nazwa' => 'required|unique:klasy',
-            'wychowawca_id' => 'required|exists:users,id',
-        ]);
-
-        Klasa::create($validated);
-        return redirect()->route('admin.klasa.create')->with('success', 'Klasa utworzona.');
-    }
-
-    public function createPrzedmiot(Request $request)
-    {
-        Przedmiot::create(['nazwa' => $request->nazwa]);
-        return redirect()->route('admin.przedmiot.create')->with('success', 'Przedmiot dodany.');
-    }
-
-    public function assignTeacherToSubjectInClass(Request $request)
-    {
-        NauczycielPrzedmiotKlasa::create([
-            'klasa_id' => $request->klasa_id,
-            'przedmiot_id' => $request->przedmiot_id,
-            'nauczyciel_id' => $request->nauczyciel_id
-        ]);
-        return back()->with('success', 'Przydział utworzony.');
-    }
-    
-    // Wrapper pomocniczy
-    public function assignStudentsToKlasaCustom(Request $request)
-    {
         $klasa = Klasa::findOrFail($request->klasa_id);
-        return $this->assignStudentsToKlasa($request, $klasa);
-    }
-
-    public function assignStudentsToKlasa(Request $request, Klasa $klasa)
-    {
-        $uczniowieIds = $request->input('uczniowie_ids');
-        $klasa->uczniowie()->syncWithoutDetaching($uczniowieIds);
+        $klasa->uczniowie()->syncWithoutDetaching($request->uczniowie_ids);
+        
         return back()->with('success', 'Uczniowie przypisani.');
     }
 
-    public function linkParentToStudent(Request $request)
+    // Rodzic -> Uczeń
+    public function createRodzicUczen()
     {
+        $rodzice = User::where('role', 'rodzic')->get();
+        $uczniowie = User::where('role', 'uczen')->get();
+        return view('admin.przydzialy.rodzic_uczen', compact('rodzice', 'uczniowie'));
+    }
+
+    public function storeRodzicUczen(Request $request)
+    {
+        $request->validate([
+            'rodzic_id' => 'required|exists:users,id',
+            'uczen_id' => [
+                'required',
+                'exists:users,id',
+                // Sprawdzamy unikalność pary w tabeli 'rodzic_uczen'
+                Rule::unique('rodzic_uczen', 'uczen_id')->where(function ($query) use ($request) {
+                    return $query->where('rodzic_id', $request->rodzic_id);
+                }),
+            ]
+        ], [
+            // Własny komunikat błędu
+            'uczen_id.unique' => 'Ten uczeń jest już przypisany do tego rodzica.'
+        ]);
+
         $rodzic = User::find($request->rodzic_id);
         $rodzic->dzieci()->attach($request->uczen_id);
-        return back()->with('success', 'Rodzic powiązany z uczniem.');
+        
+        return back()->with('success', 'Rodzic powiązany.');
     }
 }
