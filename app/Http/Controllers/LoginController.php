@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Http\Requests\StoreLoginRequest;
+use App\Http\Requests\StoreUserRequest;
+
 class LoginController extends Controller
 {
     // 1. Pokaż formularz logowania
@@ -14,18 +17,14 @@ class LoginController extends Controller
     }
 
     // 2. Obsłuż przesłanie formularza (zaloguj)
-    public function login(Request $request)
+    public function login(StoreLoginRequest $request)
     {
-        $credentials = $request->validate([
-            'login' => ['required'],
-            'password' => ['required'],
-        ]);
+        // Dane są już zweryfikowane przez LoginRequest
+        $credentials = $request->validated();
 
         // Próba logowania
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-
-            // Przekierowanie do metody dashboard(), która zdecyduje gdzie dalej
             return redirect()->intended('dashboard');
         }
 
@@ -33,6 +32,33 @@ class LoginController extends Controller
         return back()->withErrors([
             'login' => 'Nieprawidłowe dane logowania.',
         ])->onlyInput('login');
+    }
+
+    public function registrationForm()
+    {
+        return view('auth.register');
+    }
+
+    public function register(StoreUserRequest $request)
+    {
+        
+        $data = $request->validated();
+
+        // Tworzymy użytkownika
+        // Hashujemy hasło, ponieważ StoreUserRequest przekazuje je jako jawny tekst
+        $user = User::create([
+            'login'    => $data['login'],
+            'password' => Hash::make($data['password']),
+            'role'     => 'uczen',
+            'imie'     => $data['imie'],
+            'nazwisko' => $data['nazwisko'],
+        ]);
+
+        // Opcjonalnie: Automatyczne logowanie po rejestracji
+        Auth::login($user);
+
+        // Przekierowanie do dashboardu
+        return redirect()->route('dashboard');
     }
 
     // 3. Wyloguj

@@ -18,10 +18,14 @@ Route::get('/', function () {
 
 // --- GOŚCIE (niezalogowani) ---
 Route::middleware('guest')->group(function () {
-    // PDF str. 5: Grupowanie tras dla LoginController
     Route::controller(LoginController::class)->group(function () {
+        // Logowanie
         Route::get('/login', 'showLoginForm')->name('login');
         Route::post('/login', 'login');
+
+        // Rejestracja (NOWE)
+        Route::get('/register', 'showRegistrationForm')->name('register');
+        Route::post('/register', 'register');
     });
 });
 
@@ -108,4 +112,28 @@ Route::delete('/przydzialy/rodzic-uczen/{rodzic}/{uczen}', 'destroyRodzicUczen')
         Route::get('/moje-oceny', 'myGrades')->name('oceny.uczen');
         Route::get('/oceny-dzieci', 'childrenGrades')->name('oceny.rodzic');
     });
+    // === MODUŁ NAUCZYCIELA I OCEN ===
+   Route::middleware(['auth', 'role:nauczyciel'])->group(function () {
+    
+    Route::controller(OcenyController::class)->prefix('nauczyciel')->name('nauczyciel.')->group(function () {
+        // ... istniejące trasy (lista przydziałów, historia) ...
+        Route::get('/przydzialy', 'indexPrzydzialy')->name('przydzialy.index');
+        Route::get('/ocena/historia/{ocena}', 'showHistoria')->name('ocena.historia');
+
+        // 1. Widok arkusza (tylko lista)
+        Route::get('/arkusz/{klasa}/{przedmiot}', 'showArkusz')->name('arkusz.show');
+
+        // 2. NOWE: Widok formularza dodawania oceny (dla konkretnego ucznia i przedmiotu)
+        Route::get('/ocena/dodaj/{uczen}/{przedmiot}', 'create')->name('ocena.create');
+
+        // 3. NOWE: Widok formularza edycji oceny
+        Route::get('/ocena/edytuj/{ocena}', 'edit')->name('ocena.edit');
+    });
+
+    // Trasy obsługujące wysyłkę formularzy (POST/PUT)
+    Route::controller(OcenyController::class)->group(function () {
+        Route::post('/ocena', 'store')->name('ocena.store');
+        Route::put('/ocena/{ocena}', 'update')->name('ocena.update');
+    });
+});
 });
