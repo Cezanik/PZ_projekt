@@ -9,7 +9,14 @@ class Ocena extends Model
 {
     protected $table = 'oceny';
     use HasFactory;
-
+    protected $fillable = [
+        'uczen_id',
+        'nauczyciel_id',
+        'przedmiot_id',
+        'wartosc',
+        'opis',
+        'data_wystawienia'
+    ];
     // Relacje
     public function uczen()
     {

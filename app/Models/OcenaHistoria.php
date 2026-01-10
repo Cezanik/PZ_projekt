@@ -11,8 +11,13 @@ class OcenaHistoria extends Model
     use HasFactory;
 
     protected $fillable = [
-    'ocena_id', 'stara_wartosc', 'stara_opis', 'data_zmiany', 'powod_zmiany', 'zmienil_user_id'
-];
+        'ocena_id',
+        'zmienil_user_id', 
+        'stara_wartosc',
+        'stara_opis',
+        'data_zmiany',
+        'powod_zmiany'
+    ];
 
     public function ocena()
     {

@@ -12,14 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('oceny_historia', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('ocena_id')->constrained('oceny')->onDelete('cascade');
-        
-        $table->decimal('poprzednia_wartosc', 3, 2);
-        $table->decimal('nowa_wartosc', 3, 2);
-        $table->dateTime('data_zmiany');
-        $table->string('powod');
-    });
+            $table->id();
+            $table->foreignId('ocena_id')->constrained('oceny')->onDelete('cascade');
+            
+            
+            $table->decimal('stara_wartosc', 3, 2); 
+            $table->string('stara_opis')->nullable(); 
+            
+            $table->dateTime('data_zmiany');
+            $table->string('powod_zmiany');
+            
+            
+            $table->foreignId('zmienil_user_id')->constrained('users');
+
+            $table->timestamps(); 
+        });
     }
 
     /**

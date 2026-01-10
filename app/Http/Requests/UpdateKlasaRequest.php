@@ -17,8 +17,7 @@ class UpdateKlasaRequest extends FormRequest
         $klasa = $this->route('klasa');
 
         return [
-            'nazwa'         => ['required', Rule::unique('klasy')->ignore($klasa->id)],
-            'wychowawca_id' => 'required|exists:users,id',
+            'nazwa'         => ['required', Rule::unique('klasy')->ignore($klasa->id)]
         ];
     }
 }

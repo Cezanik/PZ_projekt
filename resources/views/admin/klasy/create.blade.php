@@ -16,16 +16,6 @@
     <label>Nazwa Klasy:</label><br>
     <input type="text" name="nazwa" value="{{ old('nazwa') }}"><br><br>
     
-    <label>Wychowawca:</label><br>
-    <select name="wychowawca_id">
-        <option value="">-- Wybierz --</option>
-        @foreach($nauczyciele as $n)
-            <option value="{{ $n->id }}" {{ old('wychowawca_id') == $n->id ? 'selected' : '' }}>
-                {{ $n->imie }} {{ $n->nazwisko }}
-            </option>
-        @endforeach
-    </select><br><br>
-
     <button type="submit">Zapisz</button>
 </form>
 @endsection

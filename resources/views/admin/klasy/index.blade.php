@@ -13,21 +13,14 @@
         <tr style="background-color: #f2f2f2;">
             <th>ID</th>
             <th>Nazwa Klasy</th>
-            <th>Wychowawca</th>
-            <th>Akcje</th> </tr>
+            <th>Akcje</th> 
+        </tr>
     </thead>
     <tbody>
         @foreach($klasy as $klasa)
         <tr>
             <td>{{ $klasa->id }}</td>
             <td>{{ $klasa->nazwa }}</td>
-            <td>
-                @if($klasa->wychowawca)
-                    {{ $klasa->wychowawca->imie }} {{ $klasa->wychowawca->nazwisko }}
-                @else
-                    <span style="color: gray;">Brak wychowawcy</span>
-                @endif
-            </td>
             <td>
                 <a href="{{ route('admin.klasa.edit', $klasa->id) }}" style="text-decoration: none; color: blue; margin-right: 10px;">
                     [Edytuj]

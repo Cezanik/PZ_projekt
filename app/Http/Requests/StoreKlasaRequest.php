@@ -11,8 +11,7 @@ class StoreKlasaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nazwa' => 'required|string|unique:klasy,nazwa|max:10',
-            'wychowawca_id' => 'required|exists:users,id',
-        ];
+            'nazwa' => 'required|string|unique:klasy,nazwa|max:10'
+         ];
     }
 }

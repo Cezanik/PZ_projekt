@@ -1,49 +1,64 @@
 @extends('layout')
 
 @section('content')
-<div style="padding: 20px;">
-    <h2>Historia zmian oceny</h2>
-    
-    {{-- Powrót dynamiczny do arkusza --}}
-    <a href="{{ route('nauczyciel.arkusz.show', ['klasa' => $ocena->uczen->klasaUcznia->first()->id ?? 0, 'przedmiot' => $ocena->przedmiot_id]) }}">
-        ← Wróć do arkusza ocen
-    </a>
+<div style="padding: 20px; font-family: sans-serif;">
 
-    <div style="margin-top: 20px; border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9;">
-        <h3>Szczegóły oceny (Aktualny stan)</h3>
-        <p><strong>Uczeń:</strong> {{ $ocena->uczen->imie }} {{ $ocena->uczen->nazwisko }}</p>
-        <p><strong>Przedmiot:</strong> {{ $ocena->przedmiot->nazwa ?? 'Brak nazwy' }}</p>
-        <p><strong>Wartość:</strong> {{ $ocena->wartosc }}</p>
-        <p><strong>Opis:</strong> {{ $ocena->opis }}</p>
-        <p><strong>Data wystawienia:</strong> {{ $ocena->data_wystawienia }}</p>
+    <div style="margin-bottom: 20px;">
+        <a href="javascript:history.back()" style="text-decoration: none; color: #555; font-size: 14px;">
+            &larr; Wróć
+        </a>
+        <h2 style="margin-top: 10px;">Historia zmian oceny</h2>
+        
+        <div style="background-color: #f1f3f5; padding: 15px; border-radius: 5px; margin-top: 15px;">
+            <strong>Uczeń:</strong> {{ $ocena->uczen->imie }} {{ $ocena->uczen->nazwisko }} <br>
+            <strong>Przedmiot:</strong> {{ $ocena->przedmiot->nazwa }} <br>
+            <strong>Aktualna ocena:</strong> <span style="font-size: 18px; font-weight: bold; color: #0d6efd;">{{ $ocena->wartosc }}</span>
+            <br>
+            <strong>Aktualny opis:</strong> {{ $ocena->opis }}
+        </div>
     </div>
 
-    <h3>Rejestr zmian</h3>
-    <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
-        <thead>
-            <tr style="background-color: #eee;">
-                <th>Data zmiany</th>
-                <th>Poprzednia wartość</th>
-                <th>Poprzedni opis</th>
-                <th>Powód zmiany</th>
-                <th>ID Edytującego</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($historia as $wpis)
-                <tr>
-                    <td>{{ $wpis->data_zmiany }}</td>
-                    <td>{{ $wpis->stara_wartosc }}</td>
-                    <td>{{ $wpis->stara_opis }}</td>
-                    <td style="font-style: italic;">{{ $wpis->powod_zmiany }}</td>
-                    <td>{{ $wpis->zmienil_user_id }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" style="text-align: center;">Brak historii zmian dla tej oceny.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+    @if(session('success'))
+        <div style="color: green; margin-bottom: 15px;">{{ session('success') }}</div>
+    @endif
+
+    <h3 style="margin-bottom: 10px;">Oś czasu zmian:</h3>
+
+    <ul style="list-style: none; padding: 0;">
+        @forelse($historia as $wpis)
+            <li style="border-left: 4px solid #ccc; margin-left: 20px; padding-left: 20px; padding-bottom: 20px; position: relative;">
+                <div style="position: absolute; left: -10px; top: 0; width: 16px; height: 16px; background: #666; border-radius: 50%;"></div>
+                
+                <div style="font-size: 13px; color: #666; margin-bottom: 5px;">
+                    {{ \Carbon\Carbon::parse($wpis->data_zmiany)->format('d.m.Y H:i:s') }}
+                </div>
+                
+                <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <strong>Zmiana wartości:</strong> 
+                            <span style="color: #dc3545; text-decoration: line-through;">{{ $wpis->stara_wartosc }}</span> 
+                            &rarr; 
+                            <span style="color: #198754;">{{ $wpis->ocena->wartosc }}</span>
+                            <br>
+                            <strong>Poprzedni opis:</strong> {{ $wpis->stara_opis ?: '(brak)' }}
+                            <br>
+                            <strong>Powód zmiany:</strong> <em>{{ $wpis->powod_zmiany }}</em>
+                        </div>
+                        
+                        <form action="{{ route('ocena.revert', $wpis->id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz przywrócić tę wersję oceny? Nadpisze to obecną ocenę.');">
+                            @csrf
+                            <button type="submit" style="background-color: #ffc107; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px;">
+                                &#8634; Przywróć tę wersję
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        @empty
+            <p style="color: #888; font-style: italic;">Brak historii zmian dla tej oceny.</p>
+        @endforelse
+    </ul>
+
 </div>
 @endsection

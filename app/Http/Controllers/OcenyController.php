@@ -88,6 +88,45 @@ class OcenyController extends Controller
                     ->get();
         return view('nauczyciel.historia_zmian', compact('ocena', 'historia'));
     }
+    public function showUczenOceny($uczenId, $przedmiotId)
+    {
+        $uczen = User::findOrFail($uczenId);
+        $przedmiot = Przedmiot::findOrFail($przedmiotId);
+        
+        // Pobieramy oceny z tego przedmiotu dla tego ucznia
+        $oceny = Ocena::where('uczen_id', $uczenId)
+                      ->where('przedmiot_id', $przedmiotId)
+                      ->orderBy('created_at', 'desc') // Najnowsze na górze
+                      ->get();
+
+        // Potrzebujemy ID klasy, żeby zrobić przycisk "Wróć"
+        $klasaId = $uczen->klasaUcznia()->first()->id ?? 0;
+
+        return view('nauczyciel.uczen_oceny', compact('uczen', 'przedmiot', 'oceny', 'klasaId'));
+    }
+
+    // 7. Usuwanie oceny
+    public function destroy(Ocena $ocena)
+    {
+        // Sprawdzenie czy to ocena wystawiona przez zalogowanego nauczyciela
+        if ($ocena->nauczyciel_id !== Auth::id()) {
+            abort(403, 'Możesz usuwać tylko oceny wystawione przez siebie.');
+        }
+
+        $ocena->delete();
+
+        return back()->with('success', 'Ocena została usunięta.');
+    }
+    public function myHistory()
+    {
+        // Pobieramy wpisy z historii, gdzie 'zmienil_user_id' to obecny użytkownik
+        $historia = OcenaHistoria::where('zmienil_user_id', Auth::id())
+            ->with(['ocena.uczen', 'ocena.przedmiot']) // Eager loading relacji
+            ->orderBy('data_zmiany', 'desc')
+            ->get();
+
+        return view('nauczyciel.historia_globalna', compact('historia'));
+    }
 
     // === AKCJE (Store / Update / Revert) ===
 
@@ -178,14 +217,15 @@ class OcenyController extends Controller
 
     // --- UCZEŃ / RODZIC ---
     public function myGrades()
-    {
-        $user = Auth::user();
-        $oceny = Ocena::with('przedmiot', 'nauczyciel')
-                      ->where('uczen_id', $user->id)
-                      ->get()
-                      ->groupBy('przedmiot.nazwa');
-        return view('uczen.oceny', compact('oceny'));
-    }
+{
+    $user = Auth::user();
+    $oceny = Ocena::with('przedmiot', 'nauczyciel')
+                  ->where('uczen_id', $user->id)
+                  ->get()
+                  ->groupBy('przedmiot.nazwa');
+                  
+    return view('uczen.oceny', compact('oceny'));
+}
 
     public function childrenGrades()
     {

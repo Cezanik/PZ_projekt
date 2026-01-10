@@ -1,0 +1,10 @@
+php artisan make:migration create_nazwa_tabeli_table
+php artisan make:controller NazwaController
+php artisan make:model NazwaModelu
+php artisan make:middleware NazwaMiddleware
+php artisan make:request NazwaRequest
+
+php artisan db:seed
+
+php artisan migrate
+php artisan migrate:fresh --seed

@@ -44,11 +44,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function wychowawstwo()
-    {
-        return $this->hasOne(Klasa::class, 'wychowawca_id');
-    }
-
     public function klasaUcznia()
     {
         return $this->belongsToMany(Klasa::class, 'uczniowie_klasy', 'uczen_id', 'klasa_id');

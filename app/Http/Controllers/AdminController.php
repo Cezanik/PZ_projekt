@@ -83,13 +83,12 @@ class AdminController extends Controller
 
     public function indexKlasy()
     {
-        $klasy = Klasa::with('wychowawca')->get();
+        $klasy = Klasa::all();
         return view('admin.klasy.index', compact('klasy'));
     }
 
     public function createKlasa()
     {
-        $nauczyciele = User::where('role', 'nauczyciel')->get();
         return view('admin.klasy.create', compact('nauczyciele'));
     }
 
@@ -102,8 +101,8 @@ class AdminController extends Controller
 
     public function editKlasa(Klasa $klasa)
     {
-        $nauczyciele = User::where('role', 'nauczyciel')->get();
-        return view('admin.klasy.edit', compact('klasa', 'nauczyciele'));
+
+    return view('admin.klasy.edit', compact('klasa', 'nauczyciele'));
     }
 
     // Zmieniamy Request na UpdateKlasaRequest

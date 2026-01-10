@@ -82,13 +82,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['role:nauczyciel'])->group(function () {
         Route::controller(OcenyController::class)
             ->prefix('nauczyciel')
-            ->name('nauczyciel.') // To naprawi błędy "Route not defined" w dashboardzie
+            ->name('nauczyciel.') 
             ->group(function () {
                 Route::get('/przydzialy', 'indexPrzydzialy')->name('przydzialy.index');
                 Route::get('/arkusz/{klasa}/{przedmiot}', 'showArkusz')->name('arkusz.show');
                 Route::get('/ocena/dodaj/{uczen}/{przedmiot}', 'create')->name('ocena.create');
                 Route::get('/ocena/edytuj/{ocena}', 'edit')->name('ocena.edit');
                 Route::get('/ocena/historia/{ocena}', 'showHistoria')->name('ocena.historia');
+                Route::get('/historia-aktywnosci', 'myHistory')->name('historia.index');
+                Route::get('/oceny/uczen/{uczen}/{przedmiot}', 'showUczenOceny')->name('oceny.uczen.details');
             });
     });
 
@@ -96,7 +98,9 @@ Route::middleware('auth')->group(function () {
     Route::controller(OcenyController::class)->group(function () {
         Route::post('/ocena', 'store')->name('ocena.store');
         Route::put('/ocena/{ocena}', 'update')->name('ocena.update'); // Ujednoliciłem parametr na {ocena}
+        Route::delete('/ocena/{ocena}', 'destroy')->name('ocena.destroy');
         Route::post('/ocena/revert/{historia_id}', 'revert')->name('ocena.revert');
+        
 
         // Uczeń i Rodzic
         Route::get('/moje-oceny', 'myGrades')->name('oceny.uczen');
