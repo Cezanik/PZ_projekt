@@ -20,7 +20,7 @@
         </div>
     @endif
 
-    <form action="{{ route('ocena.update', $ocena->id) }}" method="POST" style="border: 1px solid #ccc; padding: 20px; border-radius: 5px;">
+    <form action="{{ route('nauczyciel.ocena.update', $ocena->id) }}" method="POST" style="border: 1px solid #ccc; padding: 20px; border-radius: 5px;">
         @csrf
         @method('PUT')
 

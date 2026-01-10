@@ -20,7 +20,6 @@
                     <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Przedmiot</th>
                     <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Zmiana</th>
                     <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Powód</th>
-                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Akcja</th>
                 </tr>
             </thead>
             <tbody>
@@ -42,12 +41,6 @@
                         </td>
                         <td style="padding: 12px; font-style: italic; color: #555;">
                             {{ $wpis->powod_zmiany }}
-                        </td>
-                        <td style="padding: 12px; text-align: right;">
-                            <a href="{{ route('nauczyciel.ocena.historia', $wpis->ocena_id) }}" 
-                               style="font-size: 13px; color: #0d6efd; text-decoration: none;">
-                               Szczegóły / Przywróć
-                            </a>
                         </td>
                     </tr>
                 @empty

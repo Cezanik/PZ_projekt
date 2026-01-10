@@ -46,12 +46,6 @@
                             <strong>Powód zmiany:</strong> <em>{{ $wpis->powod_zmiany }}</em>
                         </div>
                         
-                        <form action="{{ route('ocena.revert', $wpis->id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz przywrócić tę wersję oceny? Nadpisze to obecną ocenę.');">
-                            @csrf
-                            <button type="submit" style="background-color: #ffc107; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px;">
-                                &#8634; Przywróć tę wersję
-                            </button>
-                        </form>
                     </div>
                 </div>
             </li>

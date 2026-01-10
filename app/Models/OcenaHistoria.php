@@ -23,4 +23,9 @@ class OcenaHistoria extends Model
     {
         return $this->belongsTo(Ocena::class, 'ocena_id');
     }
+    public function zmienilUser()
+    {
+        // 'zmienil_id' to nazwa klucza obcego w tabeli oceny_historia
+        return $this->belongsTo(User::class, 'zmienil_id');
+    }
 }

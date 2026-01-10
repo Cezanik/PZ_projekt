@@ -61,7 +61,7 @@
                                     </button>
                                 </a>
 
-                                <form action="{{ route('ocena.destroy', $ocena->id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć tę ocenę? TEJ OPERACJI NIE MOŻNA COFNĄĆ.');">
+                                <form action="{{ route('nauczyciel.ocena.destroy', $ocena->id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć tę ocenę? TEJ OPERACJI NIE MOŻNA COFNĄĆ.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" style="background-color: #dc3545; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; color: white; font-size: 13px;">
