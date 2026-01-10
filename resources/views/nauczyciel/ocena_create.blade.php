@@ -20,7 +20,7 @@
         </div>
     @endif
 
-    <form action="{{ route('ocena.store') }}" method="POST" style="border: 1px solid #ccc; padding: 20px; border-radius: 5px;">
+  <form action="{{ route('nauczyciel.ocena.store') }}" method="POST" style="border: 1px solid #ccc; padding: 20px; border-radius: 5px;">
         @csrf
         <input type="hidden" name="uczen_id" value="{{ $uczen->id }}">
         <input type="hidden" name="przedmiot_id" value="{{ $przedmiot->id }}">

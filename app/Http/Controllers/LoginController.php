@@ -41,39 +41,37 @@ class LoginController extends Controller
         return redirect('/login');
     }
 
-    // === TO JEST KLUCZOWE DLA DASHBOARDU NAUCZYCIELA ===
-    public function dashboard()
+   public function dashboard()
     {
         $user = Auth::user();
 
-        // Jeśli nauczyciel -> pobierz jego przydziały i przekaż do widoku
+        // 1. ADMIN
+        if ($user->role === 'admin') {
+            return view('admin.dashboard');
+        }
+
+        // 2. NAUCZYCIEL
         if ($user->role === 'nauczyciel') {
             $przydzialy = NauczycielPrzedmiotKlasa::with(['klasa', 'przedmiot'])
                 ->where('nauczyciel_id', $user->id)
                 ->get();
 
-            // Przekazujemy zmienną 'przydzialy' do widoku
             return view('nauczyciel.dashboard', compact('przydzialy'));
         }
-        if ($user->role === 'uczen')
-    {
-        $klasy = $user->klasaUcznia; 
-        return view('uczen.dashboard', compact('klasy'));
-    }
-    if ($user->role === 'rodzic'){
-        $dzieci = $user->dzieci; 
-        return view('rodzic.dashboard', compact('dzieci'));
-    }
-    {
-        $klasy = $user->klasaUcznia; 
-        return view('uczen.dashboard', compact('klasy'));
-    }
-        return match ($user->role) {
-            'admin'      => view('admin.dashboard'),
-            // 'nauczyciel' obsłużony wyżej
-            'uczen'      => view('uczen.dashboard'),
-            'rodzic'     => view('rodzic.dashboard'),
-            default      => abort(403, 'Brak przypisanej roli.'),
-        };
+
+        // 3. UCZEŃ
+        if ($user->role === 'uczen') {
+            $klasy = $user->klasaUcznia; 
+            return view('uczen.dashboard', compact('klasy'));
+        }
+
+        // 4. RODZIC
+        if ($user->role === 'rodzic') {
+            $dzieci = $user->dzieci; 
+            return view('rodzic.dashboard', compact('dzieci'));
+        }
+
+        // Domyślnie (błąd uprawnień)
+        abort(403, 'Brak przypisanej roli.');
     }
 }

@@ -2,29 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Hash;
+
+// Modele
 use App\Models\User;
 use App\Models\Klasa;
 use App\Models\Przedmiot;
 use App\Models\NauczycielPrzedmiotKlasa;
-use Illuminate\Support\Facades\Hash;
 
-// Import wszystkich Requestów (Walidatorów)
+// Requesty (Walidacja)
 use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\StoreKlasaRequest;
-use App\Http\Requests\StorePrzedmiotRequest;
-use App\Http\Requests\StorePrzydzialRequest;
-use App\Http\Requests\StoreUczenKlasaRequest; // Nowy
-use App\Http\Requests\StoreRodzicUczenRequest; // Nowy
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\StoreKlasaRequest;
 use App\Http\Requests\UpdateKlasaRequest;
+use App\Http\Requests\StorePrzedmiotRequest;
 use App\Http\Requests\UpdatePrzedmiotRequest;
-use App\Http\Requests\UpdateUczenKlasaRequest;
-use App\Http\Requests\UpdateRodzicUczenRequest;
+use App\Http\Requests\StorePrzydzialRequest;
 use App\Http\Requests\UpdatePrzydzialRequest;
+use App\Http\Requests\StoreUczenKlasaRequest;
+use App\Http\Requests\UpdateUczenKlasaRequest;
+use App\Http\Requests\StoreRodzicUczenRequest;
+use App\Http\Requests\UpdateRodzicUczenRequest;
 
 class AdminController extends Controller
 {
-    // === 1. UŻYTKOWNICY ===
+    // =========================================================================
+    // 1. ZARZĄDZANIE UŻYTKOWNIKAMI
+    // =========================================================================
 
     public function indexUsers()
     {
@@ -39,14 +43,19 @@ class AdminController extends Controller
 
     public function storeUser(StoreUserRequest $request)
     {
+        // Walidacja automatyczna przez StoreUserRequest
+        $data = $request->validated();
+        
         User::create([
-            'login' => $request->validated()['login'],
-            'password' => Hash::make($request->validated()['password']),
-            'role' => $request->validated()['role'],
-            'imie' => $request->validated()['imie'],
-            'nazwisko' => $request->validated()['nazwisko'],
+            'login'    => $data['login'],
+            'password' => Hash::make($data['password']),
+            'role'     => $data['role'],
+            'imie'     => $data['imie'],
+            'nazwisko' => $data['nazwisko'],
         ]);
-        return redirect()->route('admin.users.index')->with('success', 'Użytkownik dodany.');
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Użytkownik został dodany.');
     }
 
     public function editUser(User $user)
@@ -54,13 +63,12 @@ class AdminController extends Controller
         return view('admin.users.edit', compact('user'));
     }
 
-    // Zmieniamy Request na UpdateUserRequest
     public function updateUser(UpdateUserRequest $request, User $user)
     {
-        // Dane są już zweryfikowane. Pobieramy je metodą validated()
         $data = $request->validated();
 
-        // Obsługa hasła (jeśli puste, usuwamy z tablicy, żeby nie nadpisało starego pustym stringiem)
+        // Jeśli hasło jest puste, usuwamy je z tablicy (nie zmieniamy go)
+        // Jeśli podane, haszujemy nowe
         if (empty($data['password'])) {
             unset($data['password']);
         } else {
@@ -79,7 +87,9 @@ class AdminController extends Controller
         return back()->with('message', 'Użytkownik został usunięty.');
     }
 
-    // === 2. KLASY ===
+    // =========================================================================
+    // 2. ZARZĄDZANIE KLASAMI
+    // =========================================================================
 
     public function indexKlasy()
     {
@@ -95,21 +105,19 @@ class AdminController extends Controller
     public function storeKlasa(StoreKlasaRequest $request)
     {
         Klasa::create($request->validated());
-        return redirect()->route('admin.klasy.index')->with('success', 'Klasa utworzona.');
+        return redirect()->route('admin.klasy.index')
+            ->with('success', 'Klasa utworzona.');
     }
-
 
     public function editKlasa(Klasa $klasa)
     {
-
-    return view('admin.klasy.edit', compact('klasa');
+        // Tutaj był błąd składniowy (brak nawiasu)
+        return view('admin.klasy.edit', compact('klasa'));
     }
 
-    // Zmieniamy Request na UpdateKlasaRequest
     public function updateKlasa(UpdateKlasaRequest $request, Klasa $klasa)
     {
         $klasa->update($request->validated());
-
         return redirect()->route('admin.klasy.index')
             ->with('message', 'Klasa zaktualizowana poprawnie.');
     }
@@ -120,7 +128,9 @@ class AdminController extends Controller
         return back()->with('message', 'Klasa została usunięta.');
     }
 
-    // === 3. PRZEDMIOTY ===
+    // =========================================================================
+    // 3. ZARZĄDZANIE PRZEDMIOTAMI
+    // =========================================================================
 
     public function indexPrzedmioty()
     {
@@ -136,31 +146,35 @@ class AdminController extends Controller
     public function storePrzedmiot(StorePrzedmiotRequest $request)
     {
         Przedmiot::create($request->validated());
-        return redirect()->route('admin.przedmioty.index')->with('success', 'Przedmiot dodany.');
+        return redirect()->route('admin.przedmioty.index')
+            ->with('success', 'Przedmiot dodany.');
     }
+
     public function editPrzedmiot(Przedmiot $przedmiot)
     {
         return view('admin.przedmioty.edit', compact('przedmiot'));
     }
 
-    // Zmieniamy Request na UpdatePrzedmiotRequest
     public function updatePrzedmiot(UpdatePrzedmiotRequest $request, Przedmiot $przedmiot)
     {
         $przedmiot->update($request->validated());
-
         return redirect()->route('admin.przedmioty.index')
             ->with('message', 'Przedmiot zaktualizowany poprawnie.');
     }
+
     public function destroyPrzedmiot(Przedmiot $przedmiot)
     {
         $przedmiot->delete();
         return back()->with('message', 'Przedmiot usunięty.');
     }
 
-    // === 4. PRZYDZIAŁY (Nauczyciel -> Przedmiot) ===
+    // =========================================================================
+    // 4. PRZYDZIAŁY (Nauczyciel -> Przedmiot -> Klasa)
+    // =========================================================================
 
     public function indexPrzydzialy()
     {
+        // Eager loading (with) zapobiega problemowi N+1 zapytań
         $przydzialy = NauczycielPrzedmiotKlasa::with(['klasa', 'przedmiot', 'nauczyciel'])->get();
         return view('admin.przydzialy.index', compact('przydzialy'));
     }
@@ -170,13 +184,15 @@ class AdminController extends Controller
         $klasy = Klasa::all();
         $przedmioty = Przedmiot::all();
         $nauczyciele = User::where('role', 'nauczyciel')->get();
+        
         return view('admin.przydzialy.nauczyciel', compact('klasy', 'przedmioty', 'nauczyciele'));
     }
 
     public function storePrzydzial(StorePrzydzialRequest $request)
     {
         NauczycielPrzedmiotKlasa::create($request->validated());
-        return redirect()->route('admin.przydzialy.index')->with('success', 'Przydział utworzony.');
+        return redirect()->route('admin.przydzialy.index')
+            ->with('success', 'Przydział utworzony.');
     }
 
     public function editPrzydzial(NauczycielPrzedmiotKlasa $przydzial)
@@ -190,9 +206,7 @@ class AdminController extends Controller
 
     public function updatePrzydzial(UpdatePrzydzialRequest $request, NauczycielPrzedmiotKlasa $przydzial)
     {
-        // Aktualizujemy rekord zwalidowanymi danymi
         $przydzial->update($request->validated());
-
         return redirect()->route('admin.przydzialy.index')
             ->with('message', 'Przydział został zaktualizowany.');
     }
@@ -203,28 +217,43 @@ class AdminController extends Controller
         return back()->with('message', 'Przydział został usunięty.');
     }
 
-    // === 5. PRZYPISYWANIE (Uczniowie / Rodzice) ===
+    // =========================================================================
+    // 5. PRZYPISYWANIE UCZNIÓW DO KLAS
+    // =========================================================================
 
-    // A. Uczeń -> Klasa
+    public function indexUczenKlasa()
+    {
+        // Pobieramy tylko uczniów, którzy mają przypisaną klasę
+        $uczniowie = User::where('role', 'uczen')
+            ->has('klasaUcznia') 
+            ->with('klasaUcznia')
+            ->get();
+
+        return view('admin.przydzialy.index_uczen_klasa', compact('uczniowie'));
+    }
+
     public function createUczenKlasa()
     {
         $klasy = Klasa::all();
         $uczniowie = User::where('role', 'uczen')->get();
+        
         return view('admin.przydzialy.uczen_klasa', compact('klasy', 'uczniowie'));
     }
 
     public function storeUczenKlasa(StoreUczenKlasaRequest $request)
     {
-        $klasa = Klasa::findOrFail($request->validated()['klasa_id']);
+        $data = $request->validated();
+        $klasa = Klasa::findOrFail($data['klasa_id']);
         
-        // syncWithoutDetaching dodaje nowych uczniów, nie usuwając tych już przypisanych
-        $klasa->uczniowie()->syncWithoutDetaching($request->validated()['uczniowie_ids']);
+        // Przypisanie wielu uczniów do jednej klasy
+        // syncWithoutDetaching dodaje nowe relacje, nie usuwając istniejących
+        $klasa->uczniowie()->syncWithoutDetaching($data['uczniowie_ids']);
         
         return back()->with('success', 'Uczniowie zostali przypisani do klasy.');
     }
+
     public function editUczenKlasa(User $uczen, Klasa $klasa)
     {
-        // Pobieramy wszystkie klasy do listy rozwijanej
         $dostepneKlasy = Klasa::all();
         return view('admin.przydzialy.edit_uczen_klasa', compact('uczen', 'klasa', 'dostepneKlasy'));
     }
@@ -235,7 +264,6 @@ class AdminController extends Controller
         $uczen->klasaUcznia()->detach($klasa->id);
         
         // 2. Przypisujemy nową klasę
-        // Używamy syncWithoutDetaching lub attach, aby dodać nowe powiązanie
         $uczen->klasaUcznia()->attach($request->nowa_klasa_id);
 
         return redirect()->route('admin.uczen.klasa.index')
@@ -245,42 +273,15 @@ class AdminController extends Controller
     public function destroyUczenKlasa(User $uczen, Klasa $klasa)
     {
         $uczen->klasaUcznia()->detach($klasa->id);
-        
         return back()->with('message', 'Uczeń został wypisany z klasy.');
     }
 
-    // B. Rodzic -> Uczeń
-    public function createRodzicUczen()
-    {
-        $rodzice = User::where('role', 'rodzic')->get();
-        $uczniowie = User::where('role', 'uczen')->get();
-        return view('admin.przydzialy.rodzic_uczen', compact('rodzice', 'uczniowie'));
-    }
-
-    public function storeRodzicUczen(StoreRodzicUczenRequest $request)
-    {
-        $rodzic = User::find($request->validated()['rodzic_id']);
-        
-        // Dzięki walidacji w Request wiemy, że to połączenie jeszcze nie istnieje
-        $rodzic->dzieci()->attach($request->validated()['uczen_id']);
-        
-        return back()->with('success', 'Rodzic został powiązany z uczniem.');
-    }
-    public function indexUczenKlasa()
-    {
-        // Pobieramy uczniów, którzy mają przypisaną klasę
-        // Używamy 'has', żeby nie pokazywać uczniów bez klasy (opcjonalne)
-        $uczniowie = User::where('role', 'uczen')
-            ->has('klasaUcznia') 
-            ->with('klasaUcznia')
-            ->get();
-
-        return view('admin.przydzialy.index_uczen_klasa', compact('uczniowie'));
-    }
+    // =========================================================================
+    // 6. POWIĄZANIE RODZIC -> UCZEŃ
+    // =========================================================================
 
     public function indexRodzicUczen()
     {
-        // Pobieramy rodziców wraz z ich dziećmi
         $rodzice = User::where('role', 'rodzic')
             ->has('dzieci')
             ->with('dzieci')
@@ -288,16 +289,34 @@ class AdminController extends Controller
 
         return view('admin.przydzialy.index_rodzic_uczen', compact('rodzice'));
     }
+
+    public function createRodzicUczen()
+    {
+        $rodzice = User::where('role', 'rodzic')->get();
+        $uczniowie = User::where('role', 'uczen')->get();
+        
+        return view('admin.przydzialy.rodzic_uczen', compact('rodzice', 'uczniowie'));
+    }
+
+    public function storeRodzicUczen(StoreRodzicUczenRequest $request)
+    {
+        $data = $request->validated();
+        $rodzic = User::find($data['rodzic_id']);
+        
+        $rodzic->dzieci()->attach($data['uczen_id']);
+        
+        return back()->with('success', 'Rodzic został powiązany z uczniem.');
+    }
+
     public function editRodzicUczen(User $rodzic, User $uczen)
     {
-        // Pobieramy wszystkich uczniów do wyboru
         $wszyscyUczniowie = User::where('role', 'uczen')->get();
         return view('admin.przydzialy.edit_rodzic_uczen', compact('rodzic', 'uczen', 'wszyscyUczniowie'));
     }
 
     public function updateRodzicUczen(UpdateRodzicUczenRequest $request, User $rodzic, User $uczen)
     {
-        // 1. Odłączamy stare dziecko (ucznia)
+        // 1. Odłączamy stare dziecko
         $rodzic->dzieci()->detach($uczen->id);
         
         // 2. Przypisujemy nowego ucznia
@@ -310,7 +329,6 @@ class AdminController extends Controller
     public function destroyRodzicUczen(User $rodzic, User $uczen)
     {
         $rodzic->dzieci()->detach($uczen->id);
-        
         return back()->with('message', 'Powiązanie rodzic-uczeń zostało usunięte.');
     }
 }
