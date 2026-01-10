@@ -11,10 +11,8 @@ class UczenKlasa extends Model
 
     protected $table = 'uczniowie_klasy';
     
-    // WYMAGANE: Wyłączamy obsługę czasu, bo migracja nie ma $table->timestamps()
     public $timestamps = false; 
 
-    // WYMAGANE: Pozwalamy na wpisywanie tych pól (klucze obce)
     protected $fillable = [
         'klasa_id', 
         'uczen_id'

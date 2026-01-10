@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Hash;
 
-// Modele
 use App\Models\User;
 use App\Models\Klasa;
 use App\Models\Przedmiot;
 use App\Models\NauczycielPrzedmiotKlasa;
 
-// Requesty (Walidacja)
+
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\StoreKlasaRequest;
@@ -43,7 +42,6 @@ class AdminController extends Controller
 
     public function storeUser(StoreUserRequest $request)
     {
-        // Walidacja automatyczna przez StoreUserRequest
         $data = $request->validated();
         
         User::create([
@@ -67,8 +65,6 @@ class AdminController extends Controller
     {
         $data = $request->validated();
 
-        // Jeśli hasło jest puste, usuwamy je z tablicy (nie zmieniamy go)
-        // Jeśli podane, haszujemy nowe
         if (empty($data['password'])) {
             unset($data['password']);
         } else {
@@ -111,7 +107,6 @@ class AdminController extends Controller
 
     public function editKlasa(Klasa $klasa)
     {
-        // Tutaj był błąd składniowy (brak nawiasu)
         return view('admin.klasy.edit', compact('klasa'));
     }
 
@@ -174,7 +169,6 @@ class AdminController extends Controller
 
     public function indexPrzydzialy()
     {
-        // Eager loading (with) zapobiega problemowi N+1 zapytań
         $przydzialy = NauczycielPrzedmiotKlasa::with(['klasa', 'przedmiot', 'nauczyciel'])->get();
         return view('admin.przydzialy.index', compact('przydzialy'));
     }
@@ -223,7 +217,6 @@ class AdminController extends Controller
 
     public function indexUczenKlasa()
     {
-        // Pobieramy tylko uczniów, którzy mają przypisaną klasę
         $uczniowie = User::where('role', 'uczen')
             ->has('klasaUcznia') 
             ->with('klasaUcznia')
@@ -244,9 +237,6 @@ class AdminController extends Controller
     {
         $data = $request->validated();
         $klasa = Klasa::findOrFail($data['klasa_id']);
-        
-        // Przypisanie wielu uczniów do jednej klasy
-        // syncWithoutDetaching dodaje nowe relacje, nie usuwając istniejących
         $klasa->uczniowie()->syncWithoutDetaching($data['uczniowie_ids']);
         
         return back()->with('success', 'Uczniowie zostali przypisani do klasy.');
@@ -260,10 +250,10 @@ class AdminController extends Controller
 
     public function updateUczenKlasa(UpdateUczenKlasaRequest $request, User $uczen, Klasa $klasa)
     {
-        // 1. Odłączamy starą klasę
+        // 1. Odłącz starą klasę
         $uczen->klasaUcznia()->detach($klasa->id);
         
-        // 2. Przypisujemy nową klasę
+        // 2. Przypisujnową klasę
         $uczen->klasaUcznia()->attach($request->nowa_klasa_id);
 
         return redirect()->route('admin.uczen.klasa.index')
@@ -316,10 +306,10 @@ class AdminController extends Controller
 
     public function updateRodzicUczen(UpdateRodzicUczenRequest $request, User $rodzic, User $uczen)
     {
-        // 1. Odłączamy stare dziecko
+        // 1. Odłącz stare dziecko
         $rodzic->dzieci()->detach($uczen->id);
         
-        // 2. Przypisujemy nowego ucznia
+        // 2. Przypisuj nowego ucznia
         $rodzic->dzieci()->attach($request->nowy_uczen_id);
 
         return redirect()->route('admin.rodzic.uczen.index')

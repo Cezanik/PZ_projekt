@@ -9,7 +9,7 @@ class UpdateOcenaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Sprawdzamy czy to nauczyciel (dodatkowo w kontrolerze sprawdzimy czy "właściciel" oceny)
+
         return Auth::user()->role === 'nauczyciel';
     }
 
@@ -18,7 +18,7 @@ class UpdateOcenaRequest extends FormRequest
         return [
             'wartosc'      => 'required|numeric|between:1,6',
             'opis'         => 'required|string|max:255',
-            'powod_zmiany' => 'required|string|min:5|max:255', // Wymagany powód przy edycji
+            'powod_zmiany' => 'required|string|min:5|max:255', 
         ];
     }
 

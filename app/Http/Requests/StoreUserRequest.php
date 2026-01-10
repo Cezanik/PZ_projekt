@@ -8,7 +8,7 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // PDF str. 17: Zmieniamy na true, jeśli ma działać (zakładamy, że middleware auth już chroni trasę)
+
         return true; 
     }
 
@@ -23,7 +23,7 @@ class StoreUserRequest extends FormRequest
         ];
     }
 
-    // Opcjonalnie: własne komunikaty (nie było w PDF, ale dobra praktyka)
+
     public function messages(): array
     {
         return [

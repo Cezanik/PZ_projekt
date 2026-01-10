@@ -16,7 +16,7 @@ class StoreUczenKlasaRequest extends FormRequest
         return [
             'klasa_id' => 'required|exists:klasy,id',
             'uczniowie_ids' => 'required|array',
-            'uczniowie_ids.*' => 'exists:users,id', // Sprawdza czy każdy ID ucznia istnieje
+            'uczniowie_ids.*' => 'exists:users,id', 
         ];
     }
 

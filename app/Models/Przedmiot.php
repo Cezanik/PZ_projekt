@@ -11,10 +11,8 @@ class Przedmiot extends Model
 
     protected $table = 'przedmioty';
     
-    // WYMAGANE: Brak kolumn created_at/updated_at w bazie
     public $timestamps = false;
 
-    // WYMAGANE: Pola dozwolone do zapisu
     protected $fillable = [
         'nazwa'
     ];

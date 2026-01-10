@@ -71,7 +71,7 @@ class LoginController extends Controller
             return view('rodzic.dashboard', compact('dzieci'));
         }
 
-        // Domyślnie (błąd uprawnień)
+
         abort(403, 'Brak przypisanej roli.');
     }
 }

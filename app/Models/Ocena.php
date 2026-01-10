@@ -17,7 +17,7 @@ class Ocena extends Model
         'opis',
         'data_wystawienia'
     ];
-    // Relacje
+
     public function uczen()
     {
         return $this->belongsTo(User::class, 'uczen_id');
@@ -33,7 +33,6 @@ class Ocena extends Model
         return $this->belongsTo(Przedmiot::class, 'przedmiot_id');
     }
 
-    // Relacja do historii zmian tej oceny
     public function historia()
     {
         return $this->hasMany(OcenaHistoria::class, 'ocena_id');

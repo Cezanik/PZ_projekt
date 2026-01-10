@@ -9,12 +9,12 @@ class UpdateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Zezwalamy na wykonanie requestu
+        return true; 
     }
 
     public function rules(): array
     {
-        // Pobieramy instancję użytkownika z trasy (np. /users/{user})
+
         $user = $this->route('user');
 
         return [
@@ -22,7 +22,7 @@ class UpdateUserRequest extends FormRequest
             'imie'     => 'required|string',
             'nazwisko' => 'required|string',
             'role'     => 'required|in:admin,nauczyciel,uczen,rodzic',
-            'password' => 'nullable|min:8', // Hasło opcjonalne przy edycji
+            'password' => 'nullable|min:8', 
         ];
     }
 }

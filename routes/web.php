@@ -126,13 +126,7 @@ Route::middleware('auth')->group(function () {
             ->prefix('rodzic')
             ->name('rodzic.')
             ->group(function () {
-                // Dashboard rodzica (lista dzieci)
-                Route::get('/oceny-dzieci', 'childrenGrades')->name('dashboard'); // lub 'oceny.rodzic'
-                
-                // Szczegóły ocen dziecka
                 Route::get('/oceny/{child}', 'showChildGrades')->name('dziecko.oceny');
-                
-                // Historia oceny (widok dla rodzica)
                 Route::get('/ocena/historia/{ocena}', 'showGradeHistoryForParent')->name('ocena.historia');
             });
     });
@@ -142,11 +136,9 @@ Route::middleware('auth')->group(function () {
     // ====================================================
     Route::middleware(['role:uczen'])->group(function () {
         Route::controller(OcenyController::class)
-            // Opcjonalnie prefix 'uczen', aby oddzielić URL-e
             ->prefix('uczen')
             ->name('uczen.')
             ->group(function () {
-                Route::get('/moje-oceny', 'myGrades')->name('oceny.index');
                 Route::get('/moje-oceny/klasa/{klasa}', 'showGradesInClass')->name('oceny.klasa');
             });
     });

@@ -8,20 +8,15 @@ use App\Models\NauczycielPrzedmiotKlasa;
 use App\Models\User;
 use App\Models\Klasa;
 use App\Models\Przedmiot;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-// Pamiętaj o importach Requestów!
 use App\Http\Requests\StoreOcenaRequest;
 use App\Http\Requests\UpdateOcenaRequest;
 
 class OcenyController extends Controller
 {
-    // === DLA NAUCZYCIELA: WIDOKI ===
-
-    // 1. Lista przydziałów (To naprawia link "Dziennik" w dashboardzie)
     public function indexPrzydzialy()
     {
         $nauczycielId = Auth::id();
@@ -32,10 +27,8 @@ class OcenyController extends Controller
         return view('nauczyciel.lista_przydzialow', compact('przydzialy'));
     }
 
-    // 2. Arkusz ocen
     public function showArkusz($klasaId, $przedmiotId)
     {
-        // Weryfikacja dostępu (uproszczona)
         $maDostep = NauczycielPrzedmiotKlasa::where('nauczyciel_id', Auth::id())
             ->where('klasa_id', $klasaId)
             ->where('przedmiot_id', $przedmiotId)
@@ -60,7 +53,6 @@ class OcenyController extends Controller
         return view('nauczyciel.arkusz_ocen', compact('klasa', 'przedmiot', 'uczniowie'));
     }
 
-    // 3. Formularz dodawania
     public function create($uczenId, $przedmiotId)
     {
         $uczen = User::findOrFail($uczenId);
@@ -68,7 +60,6 @@ class OcenyController extends Controller
         return view('nauczyciel.ocena_create', compact('uczen', 'przedmiot'));
     }
 
-    // 4. Formularz edycji
     public function edit(Ocena $ocena)
     {
         if ($ocena->nauczyciel_id !== Auth::id()) {
@@ -77,7 +68,6 @@ class OcenyController extends Controller
         return view('nauczyciel.ocena_edit', compact('ocena'));
     }
 
-    // 5. Historia
     public function showHistoria(Ocena $ocena)
     {
         if ($ocena->nauczyciel_id !== Auth::id()) {
@@ -93,22 +83,21 @@ class OcenyController extends Controller
         $uczen = User::findOrFail($uczenId);
         $przedmiot = Przedmiot::findOrFail($przedmiotId);
         
-        // Pobieramy oceny z tego przedmiotu dla tego ucznia
+
         $oceny = Ocena::where('uczen_id', $uczenId)
                       ->where('przedmiot_id', $przedmiotId)
-                      ->orderBy('created_at', 'desc') // Najnowsze na górze
+                      ->orderBy('created_at', 'desc') 
                       ->get();
 
-        // Potrzebujemy ID klasy, żeby zrobić przycisk "Wróć"
+ 
         $klasaId = $uczen->klasaUcznia()->first()->id ?? 0;
 
         return view('nauczyciel.uczen_oceny', compact('uczen', 'przedmiot', 'oceny', 'klasaId'));
     }
 
-    // 7. Usuwanie oceny
     public function destroy(Ocena $ocena)
     {
-        // Sprawdzenie czy to ocena wystawiona przez zalogowanego nauczyciela
+
         if ($ocena->nauczyciel_id !== Auth::id()) {
             abort(403, 'Możesz usuwać tylko oceny wystawione przez siebie.');
         }
@@ -119,16 +108,14 @@ class OcenyController extends Controller
     }
     public function myHistory()
     {
-        // Pobieramy wpisy z historii, gdzie 'zmienil_user_id' to obecny użytkownik
+ 
         $historia = OcenaHistoria::where('zmienil_user_id', Auth::id())
-            ->with(['ocena.uczen', 'ocena.przedmiot']) // Eager loading relacji
+            ->with(['ocena.uczen', 'ocena.przedmiot']) 
             ->orderBy('data_zmiany', 'desc')
             ->get();
 
         return view('nauczyciel.historia_globalna', compact('historia'));
     }
-
-    // === AKCJE (Store / Update / Revert) ===
 
     public function store(StoreOcenaRequest $request)
     {
@@ -154,7 +141,7 @@ class OcenyController extends Controller
 
     public function update(UpdateOcenaRequest $request, Ocena $ocena)
     {
-        // UpdateOcenaRequest sprawdza role, tutaj sprawdzamy właściciela
+
         if ($ocena->nauczyciel_id !== Auth::id()) {
             abort(403, 'Możesz edytować tylko swoje oceny.');
         }
@@ -162,13 +149,13 @@ class OcenyController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($request, $ocena, $validated) {
-            // Zapis do historii (dostosowałem nazwy kolumn do Twoich migracji/kodu)
+           
             OcenaHistoria::create([
                 'ocena_id' => $ocena->id,
-                'stara_wartosc' => $ocena->wartosc, // lub 'poprzednia_wartosc' zależnie od migracji
+                'stara_wartosc' => $ocena->wartosc, 
                 'stara_opis' => $ocena->opis,
                 'data_zmiany' => Carbon::now(),
-                'powod_zmiany' => $validated['powod_zmiany'], // lub 'powod'
+                'powod_zmiany' => $validated['powod_zmiany'], 
                 'zmienil_user_id' => Auth::id()
             ]);
 
@@ -184,43 +171,11 @@ class OcenyController extends Controller
             ->with('success', 'Ocena zaktualizowana.');
     }
 
-    public function revert($historia_id)
-    {
-        $historia = OcenaHistoria::findOrFail($historia_id);
-        $ocena = $historia->ocena; // Upewnij się, że masz relację w modelu
-
-        if ($ocena->nauczyciel_id !== Auth::id()) {
-             abort(403, 'Brak uprawnień.');
-        }
-
-        // Przywracanie
-        $staraWartosc = $historia->stara_wartosc; // lub $historia->poprzednia_wartosc
-        $staraOpis = $historia->stara_opis; 
-
-        $ocena->update([
-            'wartosc' => $staraWartosc,
-            'opis' => $staraOpis
-        ]);
-        
-        // Logujemy revert w historii
-        OcenaHistoria::create([
-            'ocena_id' => $ocena->id,
-            'stara_wartosc' => $ocena->wartosc,
-            'stara_opis' => $ocena->opis,
-            'data_zmiany' => Carbon::now(),
-            'powod_zmiany' => 'Cofnięcie zmiany (ID historii: ' . $historia_id . ')',
-            'zmienil_user_id' => Auth::id()
-        ]);
-
-        return back()->with('success', 'Przywrócono poprzednią ocenę.');
-    }
-
     // --- UCZEŃ / RODZIC ---
     public function showGradesInClass(Klasa $klasa)
 {
     $user = Auth::user();
 
-    // Zabezpieczenie: Sprawdź, czy uczeń rzeczywiście należy do tej klasy
     if (!$user->klasaUcznia->contains($klasa->id)) {
         abort(403, 'Nie jesteś przypisany do tej klasy.');
     }
@@ -239,12 +194,10 @@ class OcenyController extends Controller
     {
         $rodzic = Auth::user();
 
-        // ZABEZPIECZENIE: Sprawdzamy, czy to dziecko należy do tego rodzica
         if (!$rodzic->dzieci->contains($child->id)) {
             abort(403, 'To nie jest Twoje dziecko.');
         }
 
-        // Pobieramy oceny
         $oceny = Ocena::with(['przedmiot', 'nauczyciel'])
             ->where('uczen_id', $child->id)
             ->orderBy('created_at', 'desc')
@@ -254,19 +207,17 @@ class OcenyController extends Controller
         return view('rodzic.oceny_dziecka', compact('child', 'oceny'));
     }
 
-    // 2. Pokaż historię zmian oceny (dla rodzica)
     public function showGradeHistoryForParent(Ocena $ocena)
     {
         $rodzic = Auth::user();
 
-        // ZABEZPIECZENIE: Sprawdzamy po relacji: Rodzic -> Dziecko -> Ocena
         if (!$rodzic->dzieci->contains($ocena->uczen_id)) {
             abort(403, 'Brak uprawnień do przeglądania tej oceny.');
         }
 
         $historia = OcenaHistoria::where('ocena_id', $ocena->id)
             ->orderBy('data_zmiany', 'desc')
-            ->with('zmienilUser') // Warto dodać relację w modelu OcenaHistoria do User, by widzieć kto zmienił
+            ->with('zmienilUser') 
             ->get();
 
         return view('rodzic.historia_oceny', compact('ocena', 'historia'));

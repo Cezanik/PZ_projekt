@@ -19,7 +19,6 @@ class StoreRodzicUczenRequest extends FormRequest
             'uczen_id' => [
                 'required',
                 'exists:users,id',
-                // Sprawdzamy czy ten uczeń nie jest już przypisany do tego konkretnego rodzica
                 Rule::unique('rodzic_uczen', 'uczen_id')->where(function ($query) {
                     return $query->where('rodzic_id', $this->rodzic_id);
                 }),
