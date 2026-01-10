@@ -89,7 +89,7 @@ class AdminController extends Controller
 
     public function createKlasa()
     {
-        return view('admin.klasy.create', compact('nauczyciele'));
+        return view('admin.klasy.create');
     }
 
     public function storeKlasa(StoreKlasaRequest $request)
@@ -102,7 +102,7 @@ class AdminController extends Controller
     public function editKlasa(Klasa $klasa)
     {
 
-    return view('admin.klasy.edit', compact('klasa', 'nauczyciele'));
+    return view('admin.klasy.edit', compact('klasa');
     }
 
     // Zmieniamy Request na UpdateKlasaRequest

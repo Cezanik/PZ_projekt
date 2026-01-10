@@ -120,3 +120,4 @@ Route::middleware('auth')->group(function () {
             ->name('ocena.historia');
     });
 });
+
