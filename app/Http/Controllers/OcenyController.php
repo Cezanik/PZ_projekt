@@ -216,21 +216,59 @@ class OcenyController extends Controller
     }
 
     // --- UCZEŃ / RODZIC ---
-    public function myGrades()
+    public function showGradesInClass(Klasa $klasa)
 {
     $user = Auth::user();
-    $oceny = Ocena::with('przedmiot', 'nauczyciel')
-                  ->where('uczen_id', $user->id)
-                  ->get()
-                  ->groupBy('przedmiot.nazwa');
-                  
-    return view('uczen.oceny', compact('oceny'));
+
+    // Zabezpieczenie: Sprawdź, czy uczeń rzeczywiście należy do tej klasy
+    if (!$user->klasaUcznia->contains($klasa->id)) {
+        abort(403, 'Nie jesteś przypisany do tej klasy.');
+    }
+
+
+    $oceny = Ocena::with(['przedmiot', 'nauczyciel'])
+                ->where('uczen_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->groupBy('przedmiot.nazwa');
+
+    return view('uczen.oceny_klasa', compact('oceny', 'klasa'));
 }
 
-    public function childrenGrades()
+    public function showChildGrades(User $child)
     {
         $rodzic = Auth::user();
-        $dzieci = $rodzic->dzieci()->with(['ocenyOtrzymane.przedmiot', 'ocenyOtrzymane.nauczyciel'])->get();
-        return view('rodzic.oceny', compact('dzieci'));
+
+        // ZABEZPIECZENIE: Sprawdzamy, czy to dziecko należy do tego rodzica
+        if (!$rodzic->dzieci->contains($child->id)) {
+            abort(403, 'To nie jest Twoje dziecko.');
+        }
+
+        // Pobieramy oceny
+        $oceny = Ocena::with(['przedmiot', 'nauczyciel'])
+            ->where('uczen_id', $child->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('przedmiot.nazwa');
+
+        return view('rodzic.oceny_dziecka', compact('child', 'oceny'));
+    }
+
+    // 2. Pokaż historię zmian oceny (dla rodzica)
+    public function showGradeHistoryForParent(Ocena $ocena)
+    {
+        $rodzic = Auth::user();
+
+        // ZABEZPIECZENIE: Sprawdzamy po relacji: Rodzic -> Dziecko -> Ocena
+        if (!$rodzic->dzieci->contains($ocena->uczen_id)) {
+            abort(403, 'Brak uprawnień do przeglądania tej oceny.');
+        }
+
+        $historia = OcenaHistoria::where('ocena_id', $ocena->id)
+            ->orderBy('data_zmiany', 'desc')
+            ->with('zmienilUser') // Warto dodać relację w modelu OcenaHistoria do User, by widzieć kto zmienił
+            ->get();
+
+        return view('rodzic.historia_oceny', compact('ocena', 'historia'));
     }
 }

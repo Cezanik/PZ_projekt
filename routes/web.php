@@ -105,5 +105,18 @@ Route::middleware('auth')->group(function () {
         // Uczeń i Rodzic
         Route::get('/moje-oceny', 'myGrades')->name('oceny.uczen');
         Route::get('/oceny-dzieci', 'childrenGrades')->name('oceny.rodzic');
+        Route::get('/moje-oceny/klasa/{klasa}', [OcenyController::class, 'showGradesInClass'])
+        ->name('uczen.oceny.klasa');
+    });
+    // --- RODZIC ---
+    // Grupa tras dla rodzica
+    Route::middleware('role:rodzic')->prefix('rodzic')->name('rodzic.')->group(function () {
+        // 1. Wyświetlanie ocen konkretnego dziecka
+        Route::get('/oceny/{child}', [OcenyController::class, 'showChildGrades'])
+            ->name('dziecko.oceny');
+
+        // 2. Historia zmian konkretnej oceny (dla rodzica)
+        Route::get('/ocena/historia/{ocena}', [OcenyController::class, 'showGradeHistoryForParent'])
+            ->name('ocena.historia');
     });
 });

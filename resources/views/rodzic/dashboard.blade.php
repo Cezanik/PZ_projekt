@@ -1,40 +1,36 @@
 @extends('layout')
 
 @section('content')
-<div class="container">
+<div class="container mt-4">
     <h1>Witaj, {{ Auth::user()->imie }}!</h1>
-    <p>Jesteś zalogowany jako uczeń.</p>
-
+    <p class="text-muted">Panel Rodzica</p>
     <hr>
 
-    <h3>Twoje Klasy:</h3>
+    <h3>Twoje Dzieci:</h3>
 
-    @if($klasy->isEmpty())
-        <p>Nie jesteś przypisany do żadnej klasy.</p>
+    @if($dzieci->isEmpty())
+        <div class="alert alert-warning">
+            Nie masz przypisanych żadnych dzieci w systemie.
+        </div>
     @else
-        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th>Nazwa Klasy</th>
-                    <th>Akcje</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($klasy as $klasa)
-                <tr>
-                    <td>
-                        <strong>{{ $klasa->nazwa }}</strong>
-                    </td>
-                    <td>
-                        <a href="{{ route('uczen.oceny.index') }}" 
-                           style="background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 5px;">
-                           Zobacz swoje oceny
+        <div class="row">
+            @foreach($dzieci as $dziecko)
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $dziecko->imie }} {{ $dziecko->nazwisko }}</h5>
+                        <p class="card-text">
+                            Login: {{ $dziecko->login }}<br>
+                            {{-- Możesz tu dodać klasę dziecka jeśli masz taką relację łatwo dostępną --}}
+                        </p>
+                        <a href="{{ route('rodzic.dziecko.oceny', $dziecko->id) }}" class="btn btn-primary">
+                            <i class="bi bi-journal-check"></i> Zobacz Oceny
                         </a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
     @endif
 </div>
 @endsection

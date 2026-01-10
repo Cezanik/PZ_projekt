@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-// Import potrzebny, aby pobrać klasy dla nauczyciela
 use App\Models\NauczycielPrzedmiotKlasa; 
 
 class LoginController extends Controller
@@ -56,7 +55,19 @@ class LoginController extends Controller
             // Przekazujemy zmienną 'przydzialy' do widoku
             return view('nauczyciel.dashboard', compact('przydzialy'));
         }
-
+        if ($user->role === 'uczen')
+    {
+        $klasy = $user->klasaUcznia; 
+        return view('uczen.dashboard', compact('klasy'));
+    }
+    if ($user->role === 'rodzic'){
+        $dzieci = $user->dzieci; 
+        return view('rodzic.dashboard', compact('dzieci'));
+    }
+    {
+        $klasy = $user->klasaUcznia; 
+        return view('uczen.dashboard', compact('klasy'));
+    }
         return match ($user->role) {
             'admin'      => view('admin.dashboard'),
             // 'nauczyciel' obsłużony wyżej
